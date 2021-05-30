@@ -1,5 +1,7 @@
-import Player from './player';
+const Player = require('./player');
+const Draft = require('./drafts');
 
-export default {
-    Player
-};
+module.exports = {
+    Player,
+    Draft
+}
