@@ -4,6 +4,8 @@ import logo from "./logo.svg";
 import "./App.css";
 import socketClient from 'socket.io-client';
 
+import FileUpload from './components/FileUpload';
+
 function App() {
   const [playerPool, setPlayerPool] = useState([]); 
   const socket = socketClient('/');
@@ -25,6 +27,7 @@ function App() {
       <p className="App-intro">
         To get started, edit <code>src/App.js</code> and save to reload.
         </p>
+        <FileUpload/>
     </div>
   );
 }
