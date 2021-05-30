@@ -7,26 +7,33 @@ router.post("/rankings",  upload.single('rankingFile'), async (req, res) => {
     const name = req.query.name;
     console.log(req.file);
     fs.readFile(req.file.path, 'utf8', function(err, data){
-        // Do something with the data (which holds the file information)
-        console.log(data);
-        res.end();
+        if (err) {
+            res.status(500).json(err);
+        } else {   
+            console.log(data);
+            res.json({
+                success: true,
+                message: 'Upload Succesful!'
+            });
+        }
       });
-    // });
-    // try {    
-    //   if (req.file) {
-    //     res.send({
-    //       status: true,
-    //       message: "File Uploaded!",
-    //     });
-    //   } else {
-    //     res.status(400).send({
-    //       status: false,
-    //       data: "File Not Found :(",
-    //     });
-    //   }
-    // } catch (err) {
-    //   res.status(500).send(err);
-    // }
   });
+
+  router.post("/tiers",  upload.single('tiersFile'), async (req, res) => {
+    const name = req.query.name;
+    console.log(req.file);
+    fs.readFile(req.file.path, 'utf8', function(err, data){
+        if (err) {
+            res.status(500).json(err);
+        } else {   
+            console.log(data);
+            res.json({
+                success: true,
+                message: 'Upload Succesful!'
+            });
+        }
+      });
+  });
+
 
   module.exports = router;
