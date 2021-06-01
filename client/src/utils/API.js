@@ -15,6 +15,13 @@ class API {
             url: `/api/rankings`
         });
     }
+
+    static getRankingsDetail(listId) {
+        return axios({
+            method: 'GET',
+            url: `/api/rankings/` + listId
+        });
+    }
 }
 
 export default API; 

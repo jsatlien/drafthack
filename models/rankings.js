@@ -8,7 +8,7 @@ const rankingsSchema = new Schema({
         ref: 'User'
     },
     listType: { type: String }, //standard,rookie TODO: validation
-    name: { type: String },
+    name: { type: String, unique: true, required: true },
     players: [{
         rank: { type: Number },
         player: {
