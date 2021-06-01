@@ -10,11 +10,12 @@ const rankingsSchema = new Schema({
     listType: { type: String }, //standard,rookie TODO: validation
     name: { type: String },
     players: [{
-        position: { type: Number },
+        rank: { type: Number },
         player: {
             type: Schema.Types.ObjectId,
             ref: 'Player'
-        }
+        },
+        notes: { type: String }
     }]
 });
 

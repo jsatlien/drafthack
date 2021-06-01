@@ -3,32 +3,23 @@ import React, { useState } from "react";
 import logo from "./logo.svg";
 import "./App.css";
 import socketClient from 'socket.io-client';
+import { BrowserRouter, Route, Switch } from 'react-router-dom';
+import DraftDashboard from './pages/DraftDashboard';
+import Upload from './pages/Upload';
 
-import FileUpload from './components/FileUpload';
-
-function App() {
-  const [playerPool, setPlayerPool] = useState([]); 
+function App () {
   const socket = socketClient('/');
-
   socket.on('PICK_PLAYER', () => {
-    console.log("player picked!")
-  })
-
-  const updatePlayers = async () => {
-    //pull latest picked from draft lobby
-  }
+    console.log("player picked!");
+  });
 
   return (
-    <div className="App">
-      <div className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <h2>Welcome to React</h2>
-      </div>
-      <p className="App-intro">
-        To get started, edit <code>src/App.js</code> and save to reload.
-        </p>
-        <FileUpload/>
-    </div>
+    <BrowserRouter>
+      <Switch>
+        <Route exact path='/' component={() => <DraftDashboard socket={socket}/>}/>
+        <Route exact path='/upload' component={Upload}/>
+      </Switch>
+    </BrowserRouter>
   );
 }
 

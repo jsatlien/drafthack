@@ -4,8 +4,8 @@ const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
   username: { type: String, unique: true },
-  password: String,
-  name: String,
+  password: { type: String },
+  name: { type: String },
 }, { timestamps: true });
 
 userSchema.pre('save', function save(next) {

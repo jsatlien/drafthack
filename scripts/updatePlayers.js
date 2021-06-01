@@ -28,6 +28,7 @@ fs.readFile('./logs/sleeperResponse.json', (err, data) => {
         dbPlayerArray.push({
             firstName: player.first_name,
             lastName: player.last_name,
+            searchName: player.search_full_name,
             position: player.position,
             team: player.team,
             age: player.age,

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import axios from 'axios';
+import API from '../utils/API';
 
 function FileUpload() {
     const [fileData, setFileData] = useState('');
@@ -10,14 +10,10 @@ function FileUpload() {
 
     const uploadFile = e => {
         e.preventDefault();
-        const data = new FormData();
-        data.append('rankingFile', fileData);
-        if (nameRef.current.value) {
-            axios({
-                method: 'POST',
-                url: '/api/upload/rankings?name=' + nameRef.current.value,
-                data: data,
-            }).then((res) => {
+        if (nameRef.current.value && fileData) {
+            const data = new FormData();
+            data.append('rankingFile', fileData);
+            API.uploadRankings(nameRef.current.value, data, 'standard').then((res) => {
                 console.log("success!")
             });
         }

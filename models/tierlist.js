@@ -7,6 +7,10 @@ const tierListSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'User'
     },
+    league: {
+        //TODO make object ref
+        type: String
+    },
     name: { type: String },
     tiers: [{
         tier: { type: Number },
