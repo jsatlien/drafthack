@@ -1,6 +1,8 @@
 const axios = require('axios');
 
 class API {
+
+    //Rankings methods
     static uploadRankings(listName, formData, listType) {
         return axios({
             method: 'POST',
@@ -20,6 +22,22 @@ class API {
         return axios({
             method: 'GET',
             url: `/api/rankings/` + listId
+        });
+    }
+
+    //Draft methods
+    static getDraftDetail(externalId) {
+        return axios({
+            method: 'GET',
+            url: `/api/draft?external_id=` + externalId
+        });
+    }
+
+    static getActiveDraft() {
+        //TODO: constrain by user id in session
+        return axios({
+            method: 'GET',
+            url: '/api/draft?active=Y'
         });
     }
 }

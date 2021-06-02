@@ -36,7 +36,11 @@ router.post("/rankings",  upload.single('rankingFile'), async (req, res) => {
 
                     let searchName = trimTitles.replace(/\W/ig, "").toLowerCase();
                     console.log(searchName);
-                    let dbPlayer = await db.Player.findOne({searchName});
+                    const constraints = {searchName};
+                    if (player.Position) {
+                        constraints.position = player.Position
+                    } 
+                    let dbPlayer = await db.Player.findOne(constraints);
                     if (!dbPlayer && player.Team && player.Position) {
                         console.log('player not FOUND')
                         //try searching by last name/team/position
