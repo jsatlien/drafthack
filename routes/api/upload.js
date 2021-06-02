@@ -34,6 +34,13 @@ router.post("/rankings",  upload.single('rankingFile'), async (req, res) => {
                     .replace(' Sr.', '')
                     .replace(' Jr.', '');
 
+                    let lastChars = `${trimTitles[trimTitles.length - 2]}${trimTitles[trimTitles.length - 1]}`;
+                    if (lastChars === ' V' || lastChars === ' I'  ) {
+                        let charArray = trimTitles.split('');
+                        charArray.pop();
+                        trimTitles = charArray.join('');
+                    }
+
                     let searchName = trimTitles.replace(/\W/ig, "").toLowerCase();
                     console.log(searchName);
                     const constraints = {searchName};
@@ -92,21 +99,98 @@ router.post("/rankings",  upload.single('rankingFile'), async (req, res) => {
     }
   });
 
-  router.post("/tiers",  upload.single('tiersFile'), async (req, res) => {
+  router.post("/tiers",  upload.single('rankingFile'), async (req, res) => {
     const name = req.query.name;
-    console.log(req.file);
-    fs.readFile(req.file.path, 'utf8', function(err, data){
-        if (err) {
-            res.status(500).json(err);
-        } else {   
-            console.log(data);
+    const userId = process.env.TEST_USER_ID;
+    const isFlex = req.query.flex;
+    try {
+        const results = [];
+        const playerList = [];
+        fs.createReadStream(req.file.path)
+        .pipe(csv()) 
+        .on('data', (data) => results.push(data))
+        .on('end', async () => {
+           // console.log(results);
+            for (let i in results) {
+                let player = results[i];
+                //TODO: this is gross, fix CSV import or use different library
+                let nameProp = Object.keys(player)[0];
+                // console.log(player);
+                // console.log(player[nameProp]);
+                // console.log(player['Name']);
+                try {
+                    //ignore titles like 'Sr.', 'Jr.', and 'II' 'III' etc
+                    let trimTitles = player[nameProp]
+                    .replace(' III', '')
+                    .replace(' II', '')
+                    .replace(' Sr.', '')
+                    .replace(' Jr.', '');
+                    let lastChars = `${trimTitles[trimTitles.length - 2]}${trimTitles[trimTitles.length - 1]}`;
+                    if (lastChars === ' V' || lastChars === ' I'  ) {
+                        let charArray = trimTitles.split('');
+                        charArray.pop();
+                        trimTitles = charArray.join('');
+                    }
+
+                    let searchName = trimTitles.replace(/\W/ig, "").toLowerCase();
+                    // console.log(searchName);
+                    const constraints = {searchName};
+                    if (player.Position) {
+                        constraints.position = player.Position
+                    } 
+                    let dbPlayer = await db.Player.findOne(constraints);
+                    if (!dbPlayer && player.Team && player.Position) {
+                        console.log('player not FOUND')
+                        //try searching by last name/team/position
+                        let nameArr = trimTitles.split(' ');
+                        nameArr.shift();
+                        let lastName = nameArr.join(' ').trim();
+                        console.log('lastName', lastName)
+                        dbPlayer = await db.Player.findOne({
+                            lastName,
+                            team: player.Team,
+                            position: player.Position
+                        });
+                    }   
+                    if (player && dbPlayer) {
+                        console.log(searchName);
+                        playerList.push({
+                            tier: parseInt(player.Tier),
+                            position: isFlex ? 'FLEX' : player.Position,
+                            bye: player.Bye,
+                            rank: parseInt(player.Rank),
+                            adp: player.ADP,
+                            risk: parseFloat(player.Risk),
+                            notes: player.Notes,
+                            player: dbPlayer._id, 
+                        });
+                    }
+                } catch (e) {
+                    console.log("error: ");
+                    console.log(e);
+                }
+            }
+          //  console.log(playerList);
+            const newList = {
+                user: userId,
+                name,
+                list: playerList
+            }
+            let dbList = await db.TierList.create(newList);
+
             res.json({
                 success: true,
-                message: 'Upload Succesful!'
+                message: 'Upload Succesful!',
+                data: dbList
             });
-        }
-      });
+        });
+    } catch (e) {
+        res.status(500).json({
+            success: false,
+            message: e.message || 'upload failed',
+            error: e
+        });
+    }
   });
-
 
   module.exports = router;

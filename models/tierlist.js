@@ -12,12 +12,18 @@ const tierListSchema = new Schema({
         type: String
     },
     name: { type: String },
-    tiers: [{
+    list: [{
         tier: { type: Number },
-        players: [{
+        position: { type: String, required: true },
+        bye: { type: String },
+        rank: { type: Number },
+        adp: { type: String },
+        risk: { type: Number },
+        notes: { type: String },
+        player: {
             type: Schema.Types.ObjectId,
             ref: 'Player'
-        }]
+        }
     }]
 });
 

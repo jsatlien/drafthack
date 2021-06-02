@@ -12,6 +12,21 @@ function DraftDashboard() {
         picked: []
     });
 
+    const updatePlayers = async (listId, cb) => {
+        try {
+            const listResponse = await API.getRankingsDetail(listId);
+            const { players } = listResponse.data;
+            if (players && players.length) {
+                setPlayers(players);
+                if (cb) cb();
+            }
+            else 
+                throw new Error('No players found for list id: ' + listId)
+        } catch (e) {
+            console.log(e);
+        }
+    } 
+
     const updateDraft = async (draftId) => {
         const { data } = await API.getDraftDetail(draftId);
         const draft = data[0];
@@ -30,12 +45,9 @@ function DraftDashboard() {
             const lists = response.data;
             if (lists.length) {
                 const listId = lists[0]._id;
-                //write function TODO
-                const listResponse = await API.getRankingsDetail(listId);
-                console.log(listResponse)
-                const { players } = listResponse.data;
-                setRankingListSelect(lists);
-                setPlayers(players);
+                updatePlayers(listId, () => {
+                    setRankingListSelect(lists);
+                });
             }
         } catch (e) {
             console.log(e);
@@ -44,18 +56,27 @@ function DraftDashboard() {
 
     const initDraft = async () => {
         try {
-            const response = await API.getActiveDraft();
+            let response = await API.getActiveDraft();
             console.log(response.data);
 
-            if (response.data[0] && response.data[0].picked && response.data[0].picked.length) {
-                const {externalId, picked } = response.data[0];
+            if (response.data[0]) {
+                const { external_id, picked } = response.data[0];
+
+                response = await API.checkSleeperDraftStatus('123')
+                if (response) {
+                    console.log(response.data);
+                    if (response.data.status === 'complete') {
+                        return;
+                    }
+                }
+
                 setDraft({
-                    id: externalId,
-                    picked
+                    id: external_id,
+                    picked: picked || []
                 });
             }
         } catch (e) {
-            console.log(e);
+            console.error(e);
         }
     }
 
@@ -117,11 +138,16 @@ function DraftDashboard() {
             return [];
     }
 
+    const onSelectRankings = async (e) => {
+            const { value } = e.target;
+            if (value) updatePlayers(value);
+    }
+
 
     return (
         <>
             <h1>Draft Dashboard</h1>
-            <SelectList options={rankingListSelect} ></SelectList>
+            <SelectList options={rankingListSelect} onSelect={onSelectRankings}></SelectList>
             <Table size='sm' hover striped bordered>
                 <thead>
                     <tr>

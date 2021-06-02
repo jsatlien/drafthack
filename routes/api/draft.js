@@ -92,4 +92,18 @@ router.put('/activate/:external_id', (req,res) => {
     });
 });
 
+router.put('/deactivate/:external_id', (req,res) => {
+    const externalId = req.params.external_id;
+    //TODO add user to constraint
+    db.Draft.updateOne({external_id: externalId}, {active: false})
+    .then(dbUpdatedDraft => {
+        res.json(dbUpdatedDraft);
+    })
+    .catch(err => {
+        res.status(500).json(err);
+    });
+});
+
+
+
 module.exports = router;
