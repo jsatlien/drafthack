@@ -1,18 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import API from '../../utils/API';
-import { Table } from 'react-bootstrap';
+import { Container, Row, Col } from 'react-bootstrap';
 import SelectList from '../../components/SelectList';
+import PlayerList from '../../components/PlayerList';
+import MainNav from '../../components/Navbar';
 import socketClient from 'socket.io-client';
+import { positionSelect } from '../../config/config.js';
 
 function DraftDashboard() {
     const [rankingListSelect, setRankingListSelect] = useState([]);
+    const [tierListSelect, setTierListSelect] = useState([]);
     const [players, setPlayers] = useState([]);
+    const [tiers, setTiers] = useState([]);
+    const [tierPos, setTierPos] = useState(positionSelect[0]._id); //default to 1st position in config
     const [draft, setDraft] = useState({
         id: '',
         picked: []
     });
 
-    const updatePlayers = async (listId, cb) => {
+    const updateRankingsList = async (listId, cb) => {
         try {
             const listResponse = await API.getRankingsDetail(listId);
             const { players } = listResponse.data;
@@ -20,13 +26,27 @@ function DraftDashboard() {
                 setPlayers(players);
                 if (cb) cb();
             }
-            else 
+            else
                 throw new Error('No players found for list id: ' + listId)
         } catch (e) {
             console.log(e);
         }
-    } 
+    }
 
+    const updateTierList = async (listId, cb) => {
+        try {
+            const listResponse = await API.getTierListDetail(listId);
+            const { list } = listResponse.data;
+            if (list && list.length) {
+                setTiers(list);
+                if (cb) cb();
+            }
+            else
+                throw new Error('No players found for list id: ' + listId)
+        } catch (e) {
+            console.log(e);
+        }
+    }
     const updateDraft = async (draftId) => {
         const { data } = await API.getDraftDetail(draftId);
         const draft = data[0];
@@ -40,34 +60,40 @@ function DraftDashboard() {
 
     const initLists = async () => {
         try {
-            const response = await API.getRankings();
-            //preset rankings list
-            const lists = response.data;
-            if (lists.length) {
-                const listId = lists[0]._id;
-                updatePlayers(listId, () => {
-                    setRankingListSelect(lists);
-                });
-            }
+            let response = await API.getRankings();
+            const rankingsLists = response.data;
+            response = await API.getTierLists();
+            const tiersLists = response.data;
+            setRankingListSelect(rankingsLists);
+            setTierListSelect(tiersLists);
         } catch (e) {
             console.log(e);
         }
     }
 
     const initDraft = async () => {
+        console.log("INIT DRAFT")
         try {
             let response = await API.getActiveDraft();
+            console.log("RESPONSE DATA")
             console.log(response.data);
 
             if (response.data[0]) {
                 const { external_id, picked } = response.data[0];
 
-                response = await API.checkSleeperDraftStatus('123')
-                if (response) {
-                    console.log(response.data);
-                    if (response.data.status === 'complete') {
-                        return;
+                try {
+                    response = await API.checkSleeperDraftStatus(external_id);
+                    if (response) {
+                        console.log(response.data);
+                        if (response.data.status === 'complete') {
+                            await API.endDraft(external_id);
+                            return;
+                        }
                     }
+                } catch (e) {
+                    if (e.response.status === 404) 
+                        await API.endDraft(external_id);
+                        return;
                 }
 
                 setDraft({
@@ -112,13 +138,13 @@ function DraftDashboard() {
         });
 
         //init lists & set active draft
-        initLists();
         initDraft();
+        initLists();
 
         return () => socket.disconnect();
 
     }, []);
- 
+
     const playerPicked = (player, pickedArray) => {
         for (let i = 0; i < pickedArray.length; i++) {
             if (player.sleeper_id.toString().toUpperCase() == pickedArray[i].toString().toUpperCase()) {
@@ -127,52 +153,81 @@ function DraftDashboard() {
         }
     }
 
-    const filterPlayers = () => {
+    const filterPlayers = (players) => {
         if (players) {
             if (draft && draft.picked && draft.picked.length) {
                 return players.filter(o => !playerPicked(o.player, draft.picked));
             } else
                 return players;
         }
-        else
-            return [];
+
+        return [];
     }
 
     const onSelectRankings = async (e) => {
-            const { value } = e.target;
-            if (value) updatePlayers(value);
+        const { value } = e.target;
+
+        if (value) {
+            if (value === 'default') return;
+            updateRankingsList(value);
+        }
+    }
+
+    const onSelectTiers = async (e) => {
+        console.log(draft)
+        const { value } = e.target;
+        if (value) {
+            if (value === 'default') return;
+            updateTierList(value);
+        }
+    }
+
+    const onSelectPosition = async (e) => {
+        const { value } = e.target;
+        if (value) {
+            setTierPos(value);
+        }
+    }
+
+    const filterTiers = () => {
+        if (tiers && tiers.length) {
+            return tiers.filter(player => player.position === tierPos);
+        }
+        return [];
     }
 
 
     return (
-        <>
-            <h1>Draft Dashboard</h1>
-            <SelectList options={rankingListSelect} onSelect={onSelectRankings}></SelectList>
-            <Table size='sm' hover striped bordered>
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Name</th>
-                        <th>Pos</th>
-                        <th>Team</th>
-                        <th>Age</th>
-                        <th>Notes</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {filterPlayers().map(({ rank, player, notes }) => (
-                        <tr key={rank}>
-                            <th>{rank}</th>
-                            <th>{`${player.firstName} ${player.lastName}`}</th>
-                            <th>{player.position}</th>
-                            <th>{player.team}</th>
-                            <th>{player.age}</th>
-                            <th>{notes}</th>
-                        </tr>
-                    ))}
-                </tbody>
-            </Table>
-        </>
+        <Container fluid>
+            <MainNav title='Draft Dashboard'></MainNav>
+            <Row>
+                <Col xs={6}>
+
+                </Col>
+            </Row>
+            <Row>
+                <Col></Col>
+                <Col></Col>
+            </Row>
+            <Row>
+                <Col xs={6}>
+                    <h6>Rankings</h6>
+                    <SelectList defaultMessage='Select a List...' options={rankingListSelect} onSelect={onSelectRankings}></SelectList>
+                    <PlayerList
+                        players={filterPlayers(players)}
+                        isTiered={false} />
+                </Col>
+                <Col xs={6}>
+                    <h6>Tiers</h6>
+                    <SelectList defaultMessage='Select a List...' options={tierListSelect} onSelect={onSelectTiers}></SelectList>
+                    <SelectList options={positionSelect} onSelect={onSelectPosition}></SelectList>
+
+                    <PlayerList
+                        players={filterPlayers(filterTiers())}
+                        isTiered={true} />
+                </Col>
+            </Row>
+        </Container>
     );
 }
 

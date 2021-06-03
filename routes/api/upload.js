@@ -23,8 +23,8 @@ router.post("/rankings",  upload.single('rankingFile'), async (req, res) => {
                 let player = results[i];
                 //TODO: this is gross, fix CSV import or use different library
                 let nameProp = Object.keys(player)[0];
-                console.log(player);
-                console.log(player[nameProp]);
+               // console.log(player);
+               // console.log(player[nameProp]);
                 // console.log(player['Name']);
                 try {
                     //ignore titles like 'Sr.', 'Jr.', and 'II' 'III' etc
@@ -49,24 +49,25 @@ router.post("/rankings",  upload.single('rankingFile'), async (req, res) => {
                     } 
                     let dbPlayer = await db.Player.findOne(constraints);
                     if (!dbPlayer && player.Team && player.Position) {
-                        console.log('player not FOUND')
+                       // console.log('player not FOUND')
                         //try searching by last name/team/position
                         let nameArr = trimTitles.split(' ');
                         nameArr.shift();
                         let lastName = nameArr.join(' ').trim();
-                        console.log('lastName', lastName)
+                       // console.log('lastName', lastName)
                         dbPlayer = await db.Player.findOne({
                             lastName,
                             team: player.Team,
                             position: player.Position
                         });
                     }
-                    console.log(dbPlayer);      
+                    //console.log(dbPlayer);      
                     if (player && dbPlayer) {
                         playerList.push({
                             rank: player.Rank,
                             player: dbPlayer._id, 
                             notes: player.Notes
+                            
                         })
                     }
                 } catch (e) {
@@ -111,6 +112,7 @@ router.post("/rankings",  upload.single('rankingFile'), async (req, res) => {
         .on('data', (data) => results.push(data))
         .on('end', async () => {
            // console.log(results);
+           const notFound = [];
             for (let i in results) {
                 let player = results[i];
                 //TODO: this is gross, fix CSV import or use different library
@@ -140,12 +142,10 @@ router.post("/rankings",  upload.single('rankingFile'), async (req, res) => {
                     } 
                     let dbPlayer = await db.Player.findOne(constraints);
                     if (!dbPlayer && player.Team && player.Position) {
-                        console.log('player not FOUND')
                         //try searching by last name/team/position
                         let nameArr = trimTitles.split(' ');
                         nameArr.shift();
                         let lastName = nameArr.join(' ').trim();
-                        console.log('lastName', lastName)
                         dbPlayer = await db.Player.findOne({
                             lastName,
                             team: player.Team,
@@ -165,12 +165,16 @@ router.post("/rankings",  upload.single('rankingFile'), async (req, res) => {
                             player: dbPlayer._id, 
                         });
                     }
+                    else {
+                        notFound.push(searchName);
+                    }
                 } catch (e) {
                     console.log("error: ");
                     console.log(e);
                 }
             }
           //  console.log(playerList);
+            console.log('\nNot found:',notFound);
             const newList = {
                 user: userId,
                 name,
