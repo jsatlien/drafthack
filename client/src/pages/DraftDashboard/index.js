@@ -6,8 +6,18 @@ import PlayerList from '../../components/PlayerList';
 import MainNav from '../../components/Navbar';
 import socketClient from 'socket.io-client';
 import { positionSelect } from '../../config/config.js';
+import { useSearchParams } from 'react-router-dom';
 
 function DraftDashboard() {
+    const [searchParams, sestSearchParams] = useSearchParams();
+    console.log(location);
+    useEffect(async () => {
+        if (searchParams.get('new')) {
+            const draftType = searchParams.get('type');
+            // const data = await API.getPlayerList()
+        }
+    }, []);
+
     const [rankingListSelect, setRankingListSelect] = useState([]);
     const [tierListSelect, setTierListSelect] = useState([]);
     const [players, setPlayers] = useState([]);
@@ -91,9 +101,9 @@ function DraftDashboard() {
                         }
                     }
                 } catch (e) {
-                    if (e.response.status === 404) 
+                    if (e.response.status === 404)
                         await API.endDraft(external_id);
-                        return;
+                    return;
                 }
 
                 setDraft({
@@ -111,12 +121,9 @@ function DraftDashboard() {
 
         socket.on('PICK_PLAYER', (msg) => {
             console.log("player picked!");
-            // console.log(msg);
             if (msg && msg.externalId) {
                 try {
                     updateDraft(msg.externalId);
-                    // getRankingListSelect(lists);
-                    // }
                 } catch (e) {
                     console.log(e);
                 }
@@ -129,8 +136,6 @@ function DraftDashboard() {
             if (msg && msg.externalId) {
                 try {
                     updateDraft(msg.externalId);
-                    // getRankingListSelect(lists);
-                    // }
                 } catch (e) {
                     console.log(e);
                 }
@@ -201,30 +206,35 @@ function DraftDashboard() {
         <Container fluid>
             <MainNav title='Draft Dashboard'></MainNav>
             <Row>
-                <Col xs={6}>
-
-                </Col>
-            </Row>
-            <Row>
-                <Col></Col>
-                <Col></Col>
-            </Row>
-            <Row>
-                <Col xs={6}>
-                    <h6>Rankings</h6>
-                    <SelectList defaultMessage='Select a List...' options={rankingListSelect} onSelect={onSelectRankings}></SelectList>
-                    <PlayerList
-                        players={filterPlayers(players)}
-                        isTiered={false} />
-                </Col>
-                <Col xs={6}>
-                    <h6>Tiers</h6>
+                <Col xs={12} md={6}>
+                    <h6>List 1</h6>
                     <SelectList defaultMessage='Select a List...' options={tierListSelect} onSelect={onSelectTiers}></SelectList>
                     <SelectList options={positionSelect} onSelect={onSelectPosition}></SelectList>
 
                     <PlayerList
                         players={filterPlayers(filterTiers())}
                         isTiered={true} />
+                </Col>
+                <Col xs={12} md={6}>
+                    <Row>
+                        <h6>List 2</h6>
+                        <SelectList defaultMessage='Select a List...' options={tierListSelect} onSelect={onSelectTiers}></SelectList>
+                        <SelectList options={positionSelect} onSelect={onSelectPosition}></SelectList>
+
+                        <PlayerList
+                            players={filterPlayers(filterTiers())}
+                            isTiered={true} />
+                    </Row>
+                    <Row>
+
+                        <h6>List 3</h6>
+                        <SelectList defaultMessage='Select a List...' options={tierListSelect} onSelect={onSelectTiers}></SelectList>
+                        <SelectList options={positionSelect} onSelect={onSelectPosition}></SelectList>
+
+                        <PlayerList
+                            players={filterPlayers(filterTiers())}
+                            isTiered={true} />
+                    </Row>
                 </Col>
             </Row>
         </Container>

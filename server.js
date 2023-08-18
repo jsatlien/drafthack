@@ -2,7 +2,7 @@ const express = require("express");
 const path = require("path");
 const PORT = process.env.PORT || 3001;
 const routes = require('./routes');
-const mongoose = require('mongoose');
+const db = require('./dbconfig/connection');
 const cors = require('cors');
 const app = express();
 
@@ -31,11 +31,12 @@ app.use(routes);
 
 // Send every request to the React app
 // Define any API routes before this runs
-app.get("*", function(req, res) {
+app.get("*", function (req, res) {
   res.sendFile(path.join(__dirname, "./client/build/index.html"));
 });
 
-server.listen(PORT, function() {
-  mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost/drafthack");
-  console.log(`🌎 ==> API server now on port ${PORT}!`);
-});
+db.once('open', () => {
+  server.listen(PORT, function () {
+    console.log(`🌎 ==> API server now on port ${PORT}!`);
+  });
+})

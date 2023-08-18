@@ -1,18 +1,34 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const { platform_enum } = require('./enums');
 
 const playerSchema = new Schema({
-    firstName: { type: String },
-    lastName: { type: String },
-    searchName: { type: String },
-    position: { type: String },
+    firstName: { type: String, required: true },
+    lastName: { type: String, required: true },
+    searchName: { type: String, required: true },
+    position: { type: String, required: true },
     team: { type: String },
     age: { type: Number },
-    espn_id: { type: String },
-    sleeper_id:{ type: Number },
-    yahoo_id: { type: String }
+    bye: { type: Number },
+    platformId: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    platform: {
+        type: String,
+        required: true,
+        enum: platform_enum
+    }
+});
+
+playerSchema.pre('validate', async function (next) {
+    if (this.firstName && this.lastName)
+        this.searchName = `${this.firstName.toLowerCase()}${this.lastName.toLowerCase()}`
+
+    next();
 });
 
 const Player = mongoose.model('Player', playerSchema);
- 
+
 module.exports = Player;

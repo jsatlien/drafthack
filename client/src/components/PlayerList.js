@@ -1,17 +1,14 @@
 import React, { useState } from 'react';
 import { Table } from 'react-bootstrap';
 
-function PlayerList({ players, isTiered }) {
+function PlayerList({ players }) {
+    const headers = ["#", "Name", "Team", "Bye", "Points", "Risk", "Upside", "ADP"];
 
-    //TODO: this should prob be configurable
-    const headers = isTiered ? 
-    ['Name', 'Team','Age','Risk','Bye','ADP'] : ["#","Name","Pos","Team","Age","Notes"];
-    
-    const renderTiers = () => {
+    const renderList = () => {
         console.log("rendering tiers");
         console.group(players)
         let lastTier = 0;
-        return players.map(({ name, player, tier, notes, position, rank, bye, adp, risk }, i) => {
+        return players.map(({ name, player, tier, bye, adp, risk }, i) => {
             if (tier != lastTier) {
                 lastTier = tier;
                 return (
@@ -49,29 +46,6 @@ function PlayerList({ players, isTiered }) {
         });
     }
 
-    const renderRankings = () => {
-        return players.map(({ name, player, rank, notes }) => {
-            return (
-                <tr key={rank}>
-                    <th>{rank}</th>
-                    <th>{`${player.firstName} ${player.lastName}`}</th>
-                    <th>{player.position}</th>
-                    <th>{player.team}</th>
-                    <th>{player.age}</th>
-                    <th>{notes}</th>
-                </tr>
-            );
-        });
-    }
-
-    const renderList = () => {
-        if (isTiered) {
-            return renderTiers();
-        } else {
-            return renderRankings();
-        }
-    }
-
     return (
         <Table size='sm' hover striped bordered>
             <thead>
@@ -81,16 +55,6 @@ function PlayerList({ players, isTiered }) {
             </thead>
             <tbody>
                 {renderList()}
-                {/* {players.map(({ rank, player, notes }) => (
-                    <tr key={rank}>
-                        <th>{rank}</th>
-                        <th>{`${player.firstName} ${player.lastName}`}</th>
-                        <th>{player.position}</th>
-                        <th>{player.team}</th>
-                        <th>{player.age}</th>
-                        <th>{notes}</th>
-                    </tr> */}
-                {/* ))} */}
             </tbody>
         </Table>
     )
